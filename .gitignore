@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (don't commit raw SPSS data to public repo)
+*.sav
+*.xlsx
+*.docx
+
+# Results (large binary files)
+*.pkl
+*.pdf
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# LaTeX
+*.log
+*.aux
+*.out
+*.synctex.gz
+*.toc
+*.bbl
+*.blg
+*-blx.aux
+*.xdv
+
+# OS
+Thumbs.db
