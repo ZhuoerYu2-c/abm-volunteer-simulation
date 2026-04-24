@@ -1,101 +1,106 @@
-# 大学生志愿服务场域ABM仿真验证包（v9.2 完整版）
+# 大学生志愿服务场域行动-结构互构的智能体仿真研究
+
+**基于多智能体仿真的高校志愿服务组织成员流失机制与政策实验**
+
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+## 研究概述
+
+本研究针对高校志愿服务组织普遍存在的"入口宽、出口窄"困境——大量新生涌入但高年级持续参与率偏低——运用多智能体仿真（Agent-Based Modeling, ABM）方法，基于场域理论与行动-结构互构框架，构建了志愿服务场域的动态演化模型。研究利用 572 份大学生志愿者问卷数据（张网成，2016）进行参数校准，通过 8 组蒙特卡洛仿真实验系统检验不同干预策略的效应与机制。
+
+## 核心发现
+
+1. **年级抑制的结构性根源**：学业压力（时间约束）与挫折感（期望-现实差距）是成员流失的双轨驱动机制，与管理层保护性因素的对抗共同决定了年级梯度流失格局。
+2. **招募规模的杠杆效应**：减少招募目标（200人/年）可使学年流失率从 43.0% 降至 34.6%，晋升率从 25.5% 升至 32.4%，是最具杠杆效应的单一干预手段。
+3. **激励政策的区间效应**：激励机制存在服务量下限与上限，超出上限后挫折感积累加速，提示简单提高激励强度存在边际递减。
+4. **届际更替的双面性**：取消年级更替限制在短期内降低流失率，但第 2-3 学年后流失率反超基线，呈现"短期改善、长期恶化"的逆转模式。
 
 ## 目录结构
+
 ```
-verification_package/
-├── 1_original_data/
-│   ├── 大学生志愿者挫折反应及对策调查数据.sav
-│   ├── 大学生志愿者挫折反应及对策调查数据.csv
-│   ├── 大学生志愿者挫折反应及对策调查数据_含备注.xlsx
-│   ├── 大学生志愿参与阶梯式下跌的现象分析.docx
-│   ├── deprecated_logistic_regression_output.csv   ← 废弃（旧模型）
-│   └── deprecated_logistic_regression_reproduced.csv ← 废弃（旧模型）
-│
-├── 2_empirical_analysis/
-│   ├── 09_three_regression_comparison_final.csv ← 现行表1来源
-│   ├── deprecated_08_robustness_regression.csv    ← 废弃（已被09替代）
-│   ├── 01_descriptive_statistics.csv
-│   ├── 02_frustration_vs_attrition.csv
-│   ├── 03_attrition_reasons.csv
-│   ├── 04_attrition_vs_non_attrition_comparison.csv
-│   ├── 05_correlation_matrix.csv
-│   ├── 06_logistic_regression_reproduced.csv
-│   ├── 07_factor_scores_F1_F2.csv
-│   └── 10_frustration_attrition_crosstab.csv
-│
-├── 3_model_code/
-│   ├── abm_model.py      # v9.2（含全部bug修复）
-│   ├── run_exp.py        # 8实验×15次MC
-│   └── run_figures.py    # 6图（支持多种路径）
-│
-├── 4_experiment_results/
-│   ├── all_results.pkl          # 最新实验结果（v9.2）
-│   └── 00_experiment_summary_v9.2.csv
-│
-├── 5_figures/           # 6张PNG图表
-├── 6_report/
-│   ├── report.tex        # v9.2（14页）
-│   └── report.pdf
-│
-├── reproduce_empirical.py  # 一键复现脚本（v9.2，已修正路径）
-├── verify_results.py      # 验证脚本（v9.2，已修正路径/键名）
-├── CHANGELOG.md
+abm-volunteer-simulation/
+├── paper/            # 论文全文（LaTeX 源码 + PDF）
+├── code/             # 模型代码与实验脚本
+│   ├── abm_model.py          # ABM 模型主体
+│   ├── run_exp.py           # 仿真实验（8组×15次MC）
+│   ├── run_figures.py       # 图表生成（6张图）
+│   └── reproduce_empirical.py  # 实证分析复现
+├── data/
+│   └── empirical/    # 处理后数据（原始数据见原始调查）
+│       ├── 09_three_regression_comparison_final.csv   # 表1来源
+│       ├── 02_model_parameters.csv                   # 模型参数
+│       └── *.csv                                    # 其他实证结果
+├── results/          # 实验结果与图表
+│   ├── all_results.pkl              # 完整实验结果
+│   ├── 00_experiment_summary_v9.2_final.csv
+│   └── fig*.png                     # 6张图表
+├── docs/             # 补充文档
 └── README.md
 ```
 
-## 核心实验结果（v9.2，15次MC均值）
+## 快速复现
 
-| 实验 | 学年AR | 管理层 | 活跃 | 晋升率 | 优秀项目 |
-|------|--------|--------|------|--------|---------|
-| 基线（校准） | 42.8% | 90.9 | 605 | 25.5% | 41.8% |
-| 无届际更替 | 40.9% | 83.4 | 801 | 25.5% | 40.3% |
-| 延长任期 | 42.8% | 97.9 | 614 | 25.5% | 44.1% |
-| 增加经费 | 42.3% | 92.3 | 624 | 25.5% | 70.1% |
-| 单一门槛激励 | 42.8% | 92.0 | 606 | 25.5% | 41.9% |
-| 减少招募目标 | 34.8% | 84.9 | 426 | 32.4% | 41.9% |
-| 容量控制 | 37.3% | 92.1 | 607 | 27.3% | 41.6% |
-| 双重干预 | 33.1% | 85.5 | 426 | 33.4% | 42.1% |
-
-## 独立验证步骤
+### 环境配置
 
 ```bash
-# 1. 安装依赖
-conda install python=3.10 mesa numpy matplotlib pandas statsmodels openpyxl scipy -y
+# 使用 conda（推荐）
+conda env create -f environment.yml
+conda activate abm-volunteer
 
-# 2. 复现实证分析（从原始数据→表1回归）
-python reproduce_empirical.py
-
-# 3. 运行实验（8实验×15次MC，约60秒）
-python run_exp.py --runs 15
-
-# 4. 生成图表
-python run_figures.py
-
-# 5. 编译报告
-xelatex report.tex
-
-# 6. 快速验证
-python verify_results.py
+# 或使用 pip
+pip install -r requirements.txt
 ```
 
-## v9.2 本次修正内容
+### 运行步骤
 
-### ABM代码修复（4个bug）
-1. **挫折感初始化**：从等概率choice改为加权抽样（按问卷实际频率40/120/208/160/24）
-2. **满意度更新**：修正if/elif顺序（>25在前，否则永远触发不到）
-3. **创新公式**：代码与论文一致（无冗余/5）
-4. **任期弹性**：20%提前卸任已标注（不是严格"到期才卸任"）
+```bash
+# 1. 进入 code 目录
+cd code
 
-### 报告文字同步
-- 基线管理层：90.7→90.9
-- 届际更替：82.6→83.4
-- 延长任期：95.3→97.9
-- 双重干预解释：从"与exp5相同"改为"略强但边际小"
+# 2. 复现实证分析（生成表1回归结果，约10秒）
+python reproduce_empirical.py
 
-### 实证文件清理
-- 废弃文件已明确标注deprecated前缀
-- 现行表1来源：`09_three_regression_comparison_final.csv`
+# 3. 运行仿真实验（8组×15次MC，约60秒）
+python run_exp.py --runs 15
 
-## 数据质量说明
-- 原始572行：139种记录各精确重复4次，去重后137条唯一记录
-- 描述性统计以572行报告；回归分析以137条唯一记录为独立样本
+# 4. 生成图表（6张图 + 敏感性分析，约120秒）
+python run_figures.py
+
+# 5. 返回上级目录编译论文
+cd ../
+xelatex paper/report.tex
+```
+
+## 主要结果
+
+| 实验 | 学年流失率 | 管理层人数 | 活跃人数 | 晋升率 |
+|------|-----------|-----------|---------|--------|
+| 基线（校准） | 43.0% | 88.8 | 605 | 25.5% |
+| 无届际更替 | 40.5% | 78.1 | 801 | 25.5% |
+| 延长管理层任期 | 42.9% | 93.3 | 611 | 25.5% |
+| 增加活动经费 | 42.4% | 91.5 | 610 | 25.5% |
+| 单一门槛激励 | 42.9% | 87.8 | 604 | 25.5% |
+| 减少招募目标 | 34.6% | 78.3 | 420 | 32.4% |
+| 容量控制 | 37.5% | 91.4 | 609 | 27.2% |
+| 双重干预 | 32.9% | 79.9 | 422 | 33.3% |
+
+## 理论框架
+
+本研究整合场域理论与行动-结构互构视角，构建三机制流失模型：
+
+- **学业压力**（时间约束）：年级越高，压力越大，流失率↑
+- **挫折感**（期望-现实差距）：满意度体验落差越大，流失率↑
+- **满意度**（服务质量体验）：项目质量影响成员持续参与意愿
+
+三机制通过独立月度流失公式驱动智能体动态演化，管理层角色充当保护性缓冲。
+
+## 引用
+
+```bibtex
+[待完善]
+```
+
+## 参考文献
+
+详见论文 `paper/report.tex` 中的参考文献列表。

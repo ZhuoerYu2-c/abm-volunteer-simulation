@@ -1,40 +1,37 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.so
+.Python
 *.egg-info/
+*.egg
 dist/
 build/
-venv/
-.venv/
-*.egg
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Data (don't commit raw SPSS data to public repo)
-*.sav
-*.xlsx
-*.docx
-
-# Results (large binary files)
-*.pkl
-*.pdf
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
+.eggs/
 
 # LaTeX
-*.log
 *.aux
+*.log
 *.out
-*.synctex.gz
 *.toc
 *.bbl
 *.blg
-*-blx.aux
-*.xdv
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Results (large binary files - committed selectively via git lfs or kept small)
+# Note: all_results.pkl is tracked for reproducibility
 
 # OS
+.DS_Store
 Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archive
+archive/

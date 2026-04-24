@@ -16,32 +16,45 @@ import numpy as np
 plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
 
-OUTPUT_DIR = os.path.dirname(__file__) or "."
-RESULTS_PATH = os.path.join(OUTPUT_DIR, "all_results.pkl")
+# 结果文件路径：code/ 的上一级目录
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results")
+RESULTS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results", "all_results.pkl")
 
 EXP_COLORS = {
     "exp0_calibration": "#2196F3",   # 蓝
     "exp1_no_cohort":   "#FF5722",   # 红
     "exp2_extended_term": "#4CAF50", # 绿
     "exp3_more_funding": "#FF9800",  # 橙
-    "exp4_strong_reward": "#9C27B0",  # 紫
-    "exp5_less_recruit": "#009688",   # 青
+    "exp4_strong_reward_v8": "#9C27B0",   # 紫（v8风格单一门槛激励）
+    "exp5_less_recruit_only": "#009688",   # 青（仅减少招募目标）
+    "exp6_capacity_limit_only": "#795548",  # 棕（仅容量上限）
+    "exp7_less_recruit_and_cap": "#607D8B", # 蓝灰（双重干预）
 }
 EXP_LABELS_CN = {
     "exp0_calibration": "基线（校准）",
     "exp1_no_cohort": "无届际更替",
     "exp2_extended_term": "延长管理层任期",
     "exp3_more_funding": "增加活动经费",
-    "exp4_strong_reward": "强化激励政策",
-    "exp5_less_recruit": "减少招募规模",
+    "exp4_strong_reward_v8": "强化激励（v8风格）",
+    "exp5_less_recruit_only": "减少招募目标",
+    "exp6_capacity_limit_only": "容量控制",
+    "exp7_less_recruit_and_cap": "招募+容量双重",
 }
 
 
 def load_results():
-    if not os.path.exists(RESULTS_PATH):
-        print(f"错误: 结果文件不存在 {RESULTS_PATH}")
+    # 支持多种路径
+    candidates = [
+        RESULTS_PATH,
+        os.path.join(OUTPUT_DIR, "all_results.pkl"),
+    ]
+    path = next((p for p in candidates if os.path.exists(p)), None)
+    if not path:
+        print(f"错误: 结果文件不存在。查找路径:")
+        for p in candidates:
+            print(f"  - {p}")
         sys.exit(1)
-    with open(RESULTS_PATH, "rb") as f:
+    with open(path, "rb") as f:
         return pickle.load(f)
 
 
@@ -96,7 +109,7 @@ def plot_fig1_trends(agg, results, out_dir):
     # 上图：所有实验
     ax = axes[0]
     for ek in ["exp0_calibration", "exp1_no_cohort", "exp2_extended_term",
-               "exp3_more_funding", "exp4_strong_reward", "exp5_less_recruit"]:
+               "exp3_more_funding", "exp4_strong_reward_v8", "exp5_less_recruit_only"]:
         mean = agg[ek]["active_mean"]
         std  = agg[ek]["active_std"]
         ms = [mean[s] for s in steps]
@@ -335,7 +348,7 @@ def plot_fig5_mechanisms(agg, out_dir):
     """图5：机制效应汇总（政策敏感性分析）"""
     summaries = {ek: agg[ek]["summaries"] for ek in agg}
     exps_order = ["exp0_calibration", "exp1_no_cohort", "exp2_extended_term",
-                  "exp3_more_funding", "exp4_strong_reward", "exp5_less_recruit"]
+                  "exp3_more_funding", "exp4_strong_reward_v8", "exp5_less_recruit_only"]
     labels = [EXP_LABELS_CN[ek] for ek in exps_order]
     colors = [EXP_COLORS[ek] for ek in exps_order]
 
