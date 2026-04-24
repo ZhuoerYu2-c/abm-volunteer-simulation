@@ -42,10 +42,18 @@ EXP_LABELS_CN = {
 
 
 def load_results():
-    if not os.path.exists(RESULTS_PATH):
-        print(f"错误: 结果文件不存在 {RESULTS_PATH}")
+    # 支持多种路径：脚本同目录 或 verification_package/4_experiment_results/
+    candidates = [
+        RESULTS_PATH,
+        os.path.join(OUTPUT_DIR, "..", "4_experiment_results", "all_results.pkl"),
+    ]
+    path = next((p for p in candidates if os.path.exists(p)), None)
+    if not path:
+        print(f"错误: 结果文件不存在。查找路径:")
+        for p in candidates:
+            print(f"  - {p}")
         sys.exit(1)
-    with open(RESULTS_PATH, "rb") as f:
+    with open(path, "rb") as f:
         return pickle.load(f)
 
 

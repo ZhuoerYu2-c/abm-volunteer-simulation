@@ -63,9 +63,13 @@ class VolunteerAgent:
         self.satisfaction = rng.uniform(0.55, 0.80)
 
         # ② 挫折感（期望-现实差距）
-        # 初始分布按问卷实际分布：挫折感=1→18.2%, 2→3.2%, 3→41.8%, 4→72.5%, 5→100%
-        frustration_init = rng.choice([0.18, 0.03, 0.42, 0.73, 1.00])
-        self.frustration = frustration_init
+        # 初始值按问卷实际分布加权抽样：
+        # 挫折感等级1(18.2%流失率): 40人, 等级2(3.2%): 120人,
+        # 等级3(42.3%): 208人, 等级4(72.5%): 160人, 等级5(100%): 24人
+        # 合计552人（本科1-3年级）
+        frustration_levels = [0.18, 0.03, 0.42, 0.73, 1.00]
+        frustration_weights = [40, 120, 208, 160, 24]
+        self.frustration = rng.choices(frustration_levels, weights=frustration_weights, k=1)[0]
 
         # ① 学业压力（时间约束）
         self.academic_pressure = self.ACADEMIC_PRESSURE[grade]
@@ -105,10 +109,11 @@ class VolunteerAgent:
         else:
             gain = self._r.uniform(-0.04, 0.07)
         # 边际递减：服务次数过多时体验增益衰减
-        if self.service_count > 15:
-            gain *= 0.5
-        elif self.service_count > 25:
-            gain *= 0.3
+        # v9修正：分支顺序修正（>25应在前，否则永远不触发）
+        if self.service_count > 25:
+            gain *= 0.3   # 过度投入：体验增益大幅减弱
+        elif self.service_count > 15:
+            gain *= 0.5   # 中等投入：体验增益减弱
         self.satisfaction += gain
         self.satisfaction = max(0.05, min(1.0, self.satisfaction))
 
@@ -379,6 +384,9 @@ class VolunteerFieldModel:
                         a.tenure_years = 0
                     else:
                         a.tenure_years += 1
+        # 注：当前20%提前卸任概率是制度弹性设计，
+        # 允许个别管理者因学业等原因提前退出，非严格"到期才卸任"。
+        # "延长任期"实验将term_limit从1改为2，效应仍存在但更温和。
         candidates = [a for a in self.schedule.agents
                      if a.grade >= 2 and a.association_years >= 1
                      and a.role != VolunteerAgent.MANAGER and a.is_active
@@ -409,11 +417,17 @@ class VolunteerFieldModel:
         # v9修正：使用管理层整体学业压力均值（而非单个管理者压力）
         # 使创新成功概率在管理层规模变化时更稳定
         avg_mgr_acad = np.mean([a.academic_pressure for a in managers])
+        # 创新概率 = 管理能力因子 + 资源因子 + 时间精力因子
+        # 公式与论文规则6一致：
+        #   P(innovation) = min(0.95, Am*0.05 + R*0.20 + T*0.02)
+        #   其中 T = (1 - avg_mgr_academic_pressure)
+        #   （即管理层平均学业压力越低，可投入创新的精力越多）
+        #   注意：此处直接使用(1-avg)而非(1-avg)/5，因为avg∈[0.3,0.8]
+        #   已自然归一，×0.02保证time_f∈[0.004, 0.014]，与理论设计一致
         for mgr in managers:
             ability_f  = mgr.management_ability * 0.05
             resource_f = (self.total_funding / 10.0) * 0.20
-            # 时间/精力因子：管理层学业压力越高→可投入创新的精力越少
-            time_f    = (1.0 - avg_mgr_acad) * 0.02
+            time_f     = (1.0 - avg_mgr_acad) * 0.02
             prob = max(0.01, min(0.95,
                 ability_f + resource_f + time_f + random.uniform(-0.02, 0.02)))
             if random.random() < prob:
